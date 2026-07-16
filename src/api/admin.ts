@@ -1,6 +1,7 @@
 import client from './client';
 import type {
   DashboardStats,
+  RevenueChartResponse,
   AdminUserListResponse,
   AdminUserDetail,
   AdminUser,
@@ -25,6 +26,16 @@ import type {
 export const dashboardApi = {
   stats: async (): Promise<DashboardStats> => {
     const res = await client.get('/admin/dashboard');
+    return res.data;
+  },
+  revenue: async (
+    interval: string,
+    start_date: string,
+    end_date: string
+  ): Promise<RevenueChartResponse> => {
+    const res = await client.get('/admin/dashboard/revenue', {
+      params: { interval, start_date, end_date },
+    });
     return res.data;
   },
 };

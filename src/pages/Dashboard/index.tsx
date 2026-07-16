@@ -3,6 +3,7 @@ import { dashboardApi } from '../../api/admin';
 import { StatCard } from '../../components/StatCard';
 import { PageLoader } from '../../components/LoadingSpinner';
 import type { DashboardStats } from '../../api/types';
+import { RevenueChart } from './RevenueChart';
 
 export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -42,6 +43,11 @@ export function DashboardPage() {
         <StatCard icon="📄" label="Total Reports" value={s.total_reports} accent="primary" />
         <StatCard icon="📅" label="Reports Today" value={s.reports_today} accent="teal" />
         <StatCard icon="📆" label="Reports This Month" value={s.reports_this_month} accent="orange" />
+      </section>
+
+      {/* Revenue Chart */}
+      <section className="dashboard-row" style={{ marginBottom: '1.5rem' }}>
+        <RevenueChart />
       </section>
 
       {/* Breakdown Row */}

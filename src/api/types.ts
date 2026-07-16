@@ -30,6 +30,15 @@ export interface DashboardStats {
   reports_this_month: number;
 }
 
+export interface RevenueChartData {
+  date: string;
+  revenue: number;
+}
+
+export interface RevenueChartResponse {
+  data: RevenueChartData[];
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 export interface AdminUser {
