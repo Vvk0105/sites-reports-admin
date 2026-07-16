@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -92,7 +93,7 @@ export function LoginPage() {
                 onClick={() => setShowPass(!showPass)}
                 tabIndex={-1}
               >
-                {showPass ? '🙈' : '👁️'}
+                {showPass ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
               </button>
             </div>
           </div>
