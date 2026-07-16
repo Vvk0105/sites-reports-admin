@@ -88,7 +88,7 @@ export function UsersPage() {
     {
       key: 'plan_type',
       header: 'Plan',
-      render: (u) => <Badge label={u.plan_type === 'yearly' ? 'Yearly Pro' : 'Free Trial'} variant={u.plan_type === 'yearly' ? 'pro' : 'free'} />,
+      render: (u) => <Badge label={u.plan_type} variant={u.plan_type.toLowerCase().includes('trial') ? 'free' : 'pro'} />,
       width: '130px',
     },
     {
@@ -129,11 +129,14 @@ export function UsersPage() {
       <div className="page-toolbar">
         <div className="page-toolbar__filters">
           <SearchBar value={search} onChange={handleSearchChange} placeholder="Search by email or name..." />
-          <select className="filter-select" value={planFilter} onChange={(e) => handlePlanChange(e.target.value)}>
-            <option value="">All Plans</option>
-            <option value="trial">Free Trial</option>
-            <option value="yearly">Yearly Pro</option>
-          </select>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Filter by plan name..."
+            value={planFilter}
+            onChange={(e) => handlePlanChange(e.target.value)}
+            style={{ width: '180px' }}
+          />
           <select className="filter-select" value={statusFilter} onChange={(e) => handleStatusChange(e.target.value)}>
             <option value="">All Status</option>
             <option value="active">Active</option>

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../components/Modal';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { usersApi } from '../../api/admin';
-import type { AdminUser, UpdateSubscriptionRequest } from '../../api/types';
-import { formatDate } from '../../utils/format';
+import { usersApi, plansApi } from '../../api/admin';
+import type { AdminUser, UpdateSubscriptionRequest, Plan } from '../../api/types';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -12,27 +11,47 @@ interface SubscriptionModalProps {
   user: AdminUser | null;
 }
 
-const PLAN_OPTIONS = ['trial', 'yearly'];
-const STATUS_OPTIONS = ['trial', 'active', 'expired', 'deactivated'];
+const STATUS_OPTIONS = ['trial', 'active', 'cancelled', 'expired', 'deactivated'];
 
 export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: SubscriptionModalProps) {
-  const [planType, setPlanType] = useState('trial');
-  const [status, setStatus] = useState('trial');
-  const [reportLimit, setReportLimit] = useState(10);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [planId, setPlanId] = useState<number>(0);
+  const [status, setStatus] = useState('active');
   const [endDate, setEndDate] = useState('');
+  
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingPlans, setIsFetchingPlans] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPlans();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     setError('');
-    setPlanType('yearly');
     setStatus('active');
-    setReportLimit(99999);
     // Default end date: 1 year from today
     const d = new Date();
     d.setFullYear(d.getFullYear() + 1);
     setEndDate(d.toISOString().split('T')[0]);
   }, [user]);
+
+  const fetchPlans = async () => {
+    setIsFetchingPlans(true);
+    try {
+      const data = await plansApi.list();
+      setPlans(data);
+      if (data.length > 0 && !planId) {
+        setPlanId(data[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to fetch plans', err);
+    } finally {
+      setIsFetchingPlans(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +60,8 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
     setError('');
     try {
       const req: UpdateSubscriptionRequest = {
-        plan_type: planType,
+        plan_id: planId,
         status,
-        report_limit: Number(reportLimit),
         end_date: endDate ? new Date(endDate).toISOString() : null,
       };
       await usersApi.updateSubscription(user.id, req);
@@ -66,7 +84,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
       footer={
         <div className="modal__footer-actions">
           <button className="btn btn--ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
-          <button className="btn btn--primary" onClick={handleSubmit} disabled={isLoading}>
+          <button className="btn btn--primary" onClick={handleSubmit} disabled={isLoading || isFetchingPlans}>
             {isLoading ? <LoadingSpinner size="sm" /> : 'Update Subscription'}
           </button>
         </div>
@@ -82,53 +100,50 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="modal-form">
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label" htmlFor="sub-plan">Plan Type</label>
-            <select id="sub-plan" className="form-select" value={planType} onChange={(e) => setPlanType(e.target.value)}>
-              {PLAN_OPTIONS.map((o) => (
-                <option key={o} value={o}>{o === 'yearly' ? 'Yearly Pro' : 'Free Trial'}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="sub-status">Status</label>
-            <select id="sub-status" className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>
-              ))}
-            </select>
-          </div>
+      {isFetchingPlans ? (
+        <div style={{ padding: '2rem 0' }}>
+          <LoadingSpinner size="md" />
         </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label" htmlFor="sub-limit">Report Limit</label>
-            <input
-              id="sub-limit"
-              type="number"
-              className="form-input"
-              value={reportLimit}
-              min={0}
-              onChange={(e) => setReportLimit(Number(e.target.value))}
-            />
-            <p className="form-hint">Use 99999 for unlimited</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label" htmlFor="sub-plan">Plan</label>
+              <select id="sub-plan" className="form-select" value={planId} onChange={(e) => setPlanId(Number(e.target.value))}>
+                {plans.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.currency} {p.price})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="sub-status">Status</label>
+              <select id="sub-status" className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="sub-end-date">Expiry Date</label>
-            <input
-              id="sub-end-date"
-              type="date"
-              className="form-input"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-        </div>
 
-        {error && <div className="form-error">⚠️ {error}</div>}
-      </form>
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label" htmlFor="sub-end-date">Expiry Date</label>
+              <input
+                id="sub-end-date"
+                type="date"
+                className="form-input"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+              <p className="form-hint">Leave blank for no expiry</p>
+            </div>
+          </div>
+
+          {error && <div className="form-error">⚠️ {error}</div>}
+        </form>
+      )}
     </Modal>
   );
 }

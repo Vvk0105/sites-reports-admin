@@ -85,8 +85,7 @@ export interface AdminSubscription {
 }
 
 export interface UpdateSubscriptionRequest {
-  plan_type: string;
-  report_limit: number;
+  plan_id: number;
   status: string;
   end_date?: string | null;
 }
@@ -141,4 +140,56 @@ export interface UserListParams extends ListParams {
 export interface ReportListParams extends ListParams {
   status?: string;
   email_sent?: boolean;
+}
+
+// ─── Plans ───────────────────────────────────────────────────────────────────
+
+export interface Plan {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number; // Decimal comes as number or string from json
+  currency: string;
+  billing_cycle: string;
+  report_limit: number;
+  trial_days: number;
+  is_trial: boolean;
+  is_active: boolean;
+}
+
+export interface CreatePlanRequest {
+  name: string;
+  description?: string | null;
+  price: number;
+  currency?: string;
+  billing_cycle: string;
+  report_limit: number;
+  trial_days?: number;
+  is_trial?: boolean;
+}
+
+export interface UpdatePlanRequest {
+  name: string;
+  description?: string | null;
+  price: number;
+  currency: string;
+  billing_cycle: string;
+  report_limit: number;
+  trial_days: number;
+  is_trial: boolean;
+  is_active: boolean;
+}
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+export interface Payment {
+  id: number;
+  user_id: number;
+  user_email: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  status: string;
+  stripe_session_id: string;
+  created_at: string;
 }

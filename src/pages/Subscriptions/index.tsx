@@ -39,7 +39,10 @@ export function SubscriptionsPage() {
       result = result.filter((s) => s.email.toLowerCase().includes(q));
     }
     if (statusFilter) result = result.filter((s) => s.status === statusFilter);
-    if (planFilter) result = result.filter((s) => s.plan_type === planFilter);
+    if (planFilter) {
+      const p = planFilter.toLowerCase();
+      result = result.filter((s) => s.plan_type.toLowerCase().includes(p));
+    }
     setFiltered(result);
   }, [subscriptions, search, statusFilter, planFilter]);
 
@@ -64,7 +67,7 @@ export function SubscriptionsPage() {
     {
       key: 'plan_type',
       header: 'Plan',
-      render: (s) => <Badge label={s.plan_type === 'yearly' ? 'Yearly Pro' : 'Free Trial'} variant={s.plan_type === 'yearly' ? 'pro' : 'free'} />,
+      render: (s) => <Badge label={s.plan_type} variant={s.plan_type.toLowerCase().includes('trial') ? 'free' : 'pro'} />,
       width: '130px',
     },
     {
@@ -120,11 +123,14 @@ export function SubscriptionsPage() {
             <option value="expired">Expired</option>
             <option value="deactivated">Deactivated</option>
           </select>
-          <select className="filter-select" value={planFilter} onChange={(e) => setPlanFilter(e.target.value)}>
-            <option value="">All Plans</option>
-            <option value="trial">Free Trial</option>
-            <option value="yearly">Yearly Pro</option>
-          </select>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Filter by plan name..."
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+            style={{ width: '180px' }}
+          />
         </div>
         <div className="page-toolbar__count">
           {filtered.length} subscription{filtered.length !== 1 ? 's' : ''}

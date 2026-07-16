@@ -14,6 +14,10 @@ import type {
   UserListParams,
   ReportListParams,
   ListParams,
+  Plan,
+  CreatePlanRequest,
+  UpdatePlanRequest,
+  Payment,
 } from './types';
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -93,6 +97,38 @@ export const reportsApi = {
 export const loginLogsApi = {
   list: async (params: ListParams = {}): Promise<LoginLogListResponse> => {
     const res = await client.get('/admin/login-logs', { params });
+    return res.data;
+  },
+};
+
+// ─── Plans ───────────────────────────────────────────────────────────────────
+
+export const plansApi = {
+  list: async (): Promise<Plan[]> => {
+    const res = await client.get('/admin/plans');
+    return res.data;
+  },
+
+  create: async (data: CreatePlanRequest): Promise<Plan> => {
+    const res = await client.post('/admin/plans', data);
+    return res.data;
+  },
+
+  update: async (id: number, data: UpdatePlanRequest): Promise<Plan> => {
+    const res = await client.put(`/admin/plans/${id}`, data);
+    return res.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await client.delete(`/admin/plans/${id}`);
+  },
+};
+
+// ─── Payments ────────────────────────────────────────────────────────────────
+
+export const paymentsApi = {
+  list: async (): Promise<Payment[]> => {
+    const res = await client.get('/admin/payments');
     return res.data;
   },
 };

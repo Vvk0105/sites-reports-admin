@@ -6,6 +6,8 @@ import { LoginPage } from '../pages/Login';
 import { DashboardPage } from '../pages/Dashboard';
 import { UsersPage } from '../pages/Users';
 import { SubscriptionsPage } from '../pages/Subscriptions';
+import { PlansPage } from '../pages/Plans';
+import { PaymentsPage } from '../pages/Payments';
 import { ReportsPage } from '../pages/Reports';
 import { LoginLogsPage } from '../pages/LoginLogs';
 import { PageLoader } from '../components/LoadingSpinner';
@@ -41,7 +43,9 @@ export function AppRoutes() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="plans" element={<PlansPage />} />
         <Route path="subscriptions" element={<SubscriptionsPage />} />
+        <Route path="payments" element={<PaymentsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="login-logs" element={<LoginLogsPage />} />
       </Route>
