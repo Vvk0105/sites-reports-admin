@@ -162,7 +162,7 @@ export function RevenueChart() {
               <Tooltip 
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-md)' }}
                 itemStyle={{ color: 'var(--primary)', fontWeight: 600 }}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Revenue']}
+                formatter={(value: any) => [`$${Number(value || 0).toFixed(2)}`, 'Revenue']}
                 labelStyle={{ color: 'var(--text-muted)', marginBottom: '4px' }}
               />
               <Area 
