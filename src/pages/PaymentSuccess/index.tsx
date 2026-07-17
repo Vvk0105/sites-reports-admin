@@ -42,8 +42,8 @@ export function PaymentSuccessPage() {
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
             <h2 style={{ color: 'var(--red)', marginBottom: '1rem' }}>Verification Failed</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>{error}</p>
-            <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
-              Return to Dashboard
+            <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%' }}>
+              Close Window
             </button>
           </>
         ) : payment?.paid ? (
@@ -69,8 +69,12 @@ export function PaymentSuccessPage() {
               </div>
             </div>
 
-            <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%' }}>
-              Go to Dashboard
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1rem' }}>
+              Your subscription is now active. You can safely close this window and return to the Site Report mobile app.
+            </p>
+
+            <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%' }}>
+              Close Window
             </button>
           </>
         ) : (
@@ -80,8 +84,8 @@ export function PaymentSuccessPage() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
               Your payment is still being processed. Please check back later.
             </p>
-            <button className="btn btn-primary" onClick={() => navigate('/dashboard')}>
-              Return to Dashboard
+            <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%' }}>
+              Close Window
             </button>
           </>
         )}

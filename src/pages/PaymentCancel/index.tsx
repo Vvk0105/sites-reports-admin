@@ -13,8 +13,8 @@ export function PaymentCancelPage() {
           You have cancelled the checkout process. No charges have been made.
         </p>
         
-        <button className="btn btn-primary" onClick={() => navigate('/dashboard')} style={{ width: '100%', marginBottom: '1rem' }}>
-          Go to Dashboard
+        <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%', marginBottom: '1rem' }}>
+          Close Window
         </button>
       </div>
     </div>
