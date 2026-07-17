@@ -10,6 +10,8 @@ import { PlansPage } from '../pages/Plans';
 import { PaymentsPage } from '../pages/Payments';
 import { ReportsPage } from '../pages/Reports';
 import { LoginLogsPage } from '../pages/LoginLogs';
+import { PaymentSuccessPage } from '../pages/PaymentSuccess';
+import { PaymentCancelPage } from '../pages/PaymentCancel';
 import { PageLoader } from '../components/LoadingSpinner';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +35,14 @@ export function AppRoutes() {
       <Route
         path="/login"
         element={<PublicRoute><LoginPage /></PublicRoute>}
+      />
+      <Route
+        path="/payment-success"
+        element={<PaymentSuccessPage />}
+      />
+      <Route
+        path="/payment-cancel"
+        element={<PaymentCancelPage />}
       />
 
       {/* Protected Admin Routes */}

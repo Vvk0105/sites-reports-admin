@@ -202,3 +202,12 @@ export interface Payment {
   stripe_session_id: string;
   created_at: string;
 }
+
+export interface PaymentVerificationResponse {
+  paid: boolean;
+  status: string;
+  amount: number;
+  currency: string;
+  plan: string;
+  payment_date: string;
+}
