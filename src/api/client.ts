@@ -1,9 +1,7 @@
 import axios from 'axios';
 
 // Support VITE_BASE_URL (e.g. http://localhost:8000/api/v1) or VITE_API_URL (bare origin)
-const rawUrl = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || 'https://sitesreports.com';
-// Strip any /api/v1 suffix so we always have the bare origin
-const BASE_URL = rawUrl.replace(/\/api\/v1\/?$/, '');
+const BASE_URL = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.sitesreports.com/api/v1';
 
 const client = axios.create({
   baseURL: BASE_URL,
