@@ -26,6 +26,10 @@ jobs:
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env.production
 
+      - name: Debug Env
+        run: |
+          cat .env.production
+
       - name: Build
         run: npm run build
 
