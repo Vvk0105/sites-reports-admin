@@ -59,7 +59,7 @@ client.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${BASE_URL}/api/v1/auth/refresh`, {
+        const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
         localStorage.setItem('access_token', data.access_token);

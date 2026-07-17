@@ -3,7 +3,7 @@ import type { LoginRequest, LoginResponse, AdminMe } from './types';
 
 export const authApi = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const res = await client.post('/api/v1/auth/admin/login', data);
+    const res = await client.post('/auth/admin/login', data);
     return res.data;
   },
 
@@ -13,11 +13,11 @@ export const authApi = {
   },
 
   refresh: async (refresh_token: string): Promise<LoginResponse> => {
-    const res = await client.post('/api/v1/auth/refresh', { refresh_token });
+    const res = await client.post('/auth/refresh', { refresh_token });
     return res.data;
   },
 
   logout: async (refresh_token: string): Promise<void> => {
-    await client.post('/api/v1/auth/logout', { refresh_token });
+    await client.post('/auth/logout', { refresh_token });
   },
 };
