@@ -63,8 +63,8 @@ export const usersApi = {
     return res.data;
   },
 
-  delete: async (id: number): Promise<void> => {
-    await client.delete(`/admin/users/${id}`);
+  delete: async (id: number, hardDelete?: boolean): Promise<void> => {
+    await client.delete(`/admin/users/${id}`, { params: { hard: hardDelete } });
   },
 
   updateSubscription: async (

@@ -5,7 +5,7 @@ import { Pagination } from '../../components/Pagination';
 import { SearchBar } from '../../components/SearchBar';
 import { Badge } from '../../components/Badge';
 import { ConfirmModal } from '../../components/Modal';
-import { CreateUserModal, EditUserModal } from './UserModal';
+import { CreateUserModal, EditUserModal, DeleteUserModal } from './UserModal';
 import { SubscriptionModal } from './SubscriptionModal';
 import { formatDate } from '../../utils/format';
 import type { AdminUser, UserListParams } from '../../api/types';
@@ -55,11 +55,11 @@ export function UsersPage() {
     return () => clearTimeout(t);
   }, [fetchUsers, search]);
 
-  const handleDelete = async () => {
+  const handleDelete = async (hard: boolean) => {
     if (!deleteUser) return;
     setIsDeleting(true);
     try {
-      await usersApi.delete(deleteUser.id);
+      await usersApi.delete(deleteUser.id, hard);
       setDeleteUser(null);
       fetchUsers();
     } finally {
@@ -192,13 +192,11 @@ export function UsersPage() {
         onSuccess={fetchUsers}
         user={subUser}
       />
-      <ConfirmModal
+      <DeleteUserModal
         isOpen={!!deleteUser}
         onClose={() => setDeleteUser(null)}
         onConfirm={handleDelete}
-        title="Delete User"
-        message={`Are you sure you want to permanently delete "${deleteUser?.email}"? This action cannot be undone.`}
-        confirmText="Delete User"
+        user={deleteUser}
         isLoading={isDeleting}
       />
     </div>

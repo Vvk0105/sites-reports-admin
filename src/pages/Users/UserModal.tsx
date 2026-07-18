@@ -163,3 +163,81 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
     </Modal>
   );
 }
+
+// ─── Delete User Modal ──────────────────────────────────────────────────────────
+
+interface DeleteUserModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (hard: boolean) => Promise<void>;
+  user: AdminUser | null;
+  isLoading: boolean;
+}
+
+export function DeleteUserModal({ isOpen, onClose, onConfirm, user, isLoading }: DeleteUserModalProps) {
+  const [deleteType, setDeleteType] = useState<'soft' | 'hard'>('soft');
+
+  const handleConfirm = () => {
+    onConfirm(deleteType === 'hard');
+  };
+
+  // Reset state on open
+  React.useEffect(() => {
+    if (isOpen) setDeleteType('soft');
+  }, [isOpen]);
+
+  if (!user) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Delete User"
+      size="sm"
+      footer={
+        <div className="modal__footer-actions">
+          <button className="btn btn--ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
+          <button className="btn btn--danger" onClick={handleConfirm} disabled={isLoading}>
+            {isLoading ? <LoadingSpinner size="sm" /> : 'Delete User'}
+          </button>
+        </div>
+      }
+    >
+      <div className="modal-content">
+        <p style={{ marginBottom: '1rem' }}>
+          Are you sure you want to delete the user <strong>{user.email}</strong>?
+        </p>
+
+        <div className="form-group">
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <input 
+              type="radio" 
+              name="deleteType" 
+              value="soft" 
+              checked={deleteType === 'soft'} 
+              onChange={() => setDeleteType('soft')}
+            />
+            <strong>Soft Delete (Recommended)</strong>
+          </label>
+          <p className="text-muted" style={{ fontSize: '0.85rem', marginLeft: '24px', marginBottom: '16px' }}>
+            Marks the user as inactive. Their logs, reports, and subscriptions are preserved.
+          </p>
+
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <input 
+              type="radio" 
+              name="deleteType" 
+              value="hard" 
+              checked={deleteType === 'hard'} 
+              onChange={() => setDeleteType('hard')}
+            />
+            <strong>Hard Delete (Testing)</strong>
+          </label>
+          <p className="text-muted" style={{ fontSize: '0.85rem', marginLeft: '24px' }}>
+            Permanently erases the user and all associated data from the database. Cannot be undone.
+          </p>
+        </div>
+      </div>
+    </Modal>
+  );
+}
