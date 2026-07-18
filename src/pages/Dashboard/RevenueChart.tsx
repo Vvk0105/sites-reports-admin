@@ -20,47 +20,47 @@ export function RevenueChart() {
   const [interval, setInterval] = useState('daily');
   const [range, setRange] = useState('30d');
 
-  const dummyRevenueData: RevenueChartData[] = [
-    { date: '2026-06-18', revenue: 120 },
-    { date: '2026-06-19', revenue: 180 },
-    { date: '2026-06-20', revenue: 150 },
-    { date: '2026-06-21', revenue: 240 },
-    { date: '2026-06-22', revenue: 320 },
-    { date: '2026-06-23', revenue: 280 },
-    { date: '2026-06-24', revenue: 390 },
-    { date: '2026-06-25', revenue: 420 },
-    { date: '2026-06-26', revenue: 380 },
-    { date: '2026-06-27', revenue: 470 },
-    { date: '2026-06-28', revenue: 510 },
-    { date: '2026-06-29', revenue: 620 },
-    { date: '2026-06-30', revenue: 590 },
-    { date: '2026-07-01', revenue: 680 },
-    { date: '2026-07-02', revenue: 720 },
-    { date: '2026-07-03', revenue: 810 },
-    { date: '2026-07-04', revenue: 780 },
-    { date: '2026-07-05', revenue: 900 },
-    { date: '2026-07-06', revenue: 860 },
-    { date: '2026-07-07', revenue: 980 },
-    { date: '2026-07-08', revenue: 1050 },
-    { date: '2026-07-09', revenue: 1100 },
-    { date: '2026-07-10', revenue: 1080 },
-    { date: '2026-07-11', revenue: 1170 },
-    { date: '2026-07-12', revenue: 1240 },
-    { date: '2026-07-13', revenue: 1310 },
-    { date: '2026-07-14', revenue: 1280 },
-    { date: '2026-07-15', revenue: 1380 },
-    { date: '2026-07-16', revenue: 1450 },
-    { date: '2026-07-17', revenue: 1520 },
-  ];
+  // const dummyRevenueData: RevenueChartData[] = [
+  //   { date: '2026-06-18', revenue: 120 },
+  //   { date: '2026-06-19', revenue: 180 },
+  //   { date: '2026-06-20', revenue: 150 },
+  //   { date: '2026-06-21', revenue: 240 },
+  //   { date: '2026-06-22', revenue: 320 },
+  //   { date: '2026-06-23', revenue: 280 },
+  //   { date: '2026-06-24', revenue: 390 },
+  //   { date: '2026-06-25', revenue: 420 },
+  //   { date: '2026-06-26', revenue: 380 },
+  //   { date: '2026-06-27', revenue: 470 },
+  //   { date: '2026-06-28', revenue: 510 },
+  //   { date: '2026-06-29', revenue: 620 },
+  //   { date: '2026-06-30', revenue: 590 },
+  //   { date: '2026-07-01', revenue: 680 },
+  //   { date: '2026-07-02', revenue: 720 },
+  //   { date: '2026-07-03', revenue: 810 },
+  //   { date: '2026-07-04', revenue: 780 },
+  //   { date: '2026-07-05', revenue: 900 },
+  //   { date: '2026-07-06', revenue: 860 },
+  //   { date: '2026-07-07', revenue: 980 },
+  //   { date: '2026-07-08', revenue: 1050 },
+  //   { date: '2026-07-09', revenue: 1100 },
+  //   { date: '2026-07-10', revenue: 1080 },
+  //   { date: '2026-07-11', revenue: 1170 },
+  //   { date: '2026-07-12', revenue: 1240 },
+  //   { date: '2026-07-13', revenue: 1310 },
+  //   { date: '2026-07-14', revenue: 1280 },
+  //   { date: '2026-07-15', revenue: 1380 },
+  //   { date: '2026-07-16', revenue: 1450 },
+  //   { date: '2026-07-17', revenue: 1520 },
+  // ];
 
-  useEffect(() => {
-    setIsLoading(true);
+  // useEffect(() => {
+  //   setIsLoading(true);
 
-    setTimeout(() => {
-      setData(dummyRevenueData);
-      setIsLoading(false);
-    }, 500);
-  }, []);
+  //   setTimeout(() => {
+  //     setData(dummyRevenueData);
+  //     setIsLoading(false);
+  //   }, 500);
+  // }, []);
 
   useEffect(() => {
     let start = new Date();
