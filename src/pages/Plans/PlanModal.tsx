@@ -150,7 +150,7 @@ export function PlanModal({ isOpen, onClose, onSuccess, plan }: PlanModalProps) 
           <div className="form-group">
             <label className="form-label">Report Limit</label>
             <input type="number" className="form-input" value={reportLimit} onChange={(e) => setReportLimit(Number(e.target.value))} />
-            <p className="form-hint">Use 99999 for unlimited</p>
+            <p className="form-hint">Use -1 for unlimited</p>
           </div>
         </div>
 

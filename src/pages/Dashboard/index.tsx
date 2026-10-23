@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '../../api/admin';
+import { Link } from 'react-router-dom';
 import { StatCard } from '../../components/StatCard';
 import { PageLoader } from '../../components/LoadingSpinner';
 import type { DashboardStats } from '../../api/types';
@@ -104,22 +105,22 @@ export function DashboardPage() {
         <div className="dashboard-card">
           <h3 className="dashboard-card__title">Quick Actions</h3>
           <div className="quick-actions">
-            <a href="/users" className="quick-action-btn">
+            <Link to="/users" className="quick-action-btn">
               <span>➕</span>
               <span>Add New User</span>
-            </a>
-            <a href="/subscriptions" className="quick-action-btn">
+            </Link>
+            <Link to="/subscriptions" className="quick-action-btn">
               <span>💳</span>
               <span>Manage Subscriptions</span>
-            </a>
-            <a href="/login-logs" className="quick-action-btn">
+            </Link>
+            <Link to="/login-logs" className="quick-action-btn">
               <span>🔐</span>
               <span>View Login Activity</span>
-            </a>
-            <a href="/reports" className="quick-action-btn">
+            </Link>
+            <Link to="/reports" className="quick-action-btn">
               <span>📄</span>
               <span>Browse Reports</span>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

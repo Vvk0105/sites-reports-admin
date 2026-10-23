@@ -30,13 +30,29 @@ export interface DashboardStats {
   reports_this_month: number;
 }
 
+export type RevenueInterval = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
 export interface RevenueChartData {
   date: string;
+  currency: string;
   revenue: number;
 }
 
 export interface RevenueChartResponse {
+  currencies: string[];
   data: RevenueChartData[];
+}
+
+// ─── Pagination ──────────────────────────────────────────────────────────────
+
+export interface PaginatedResponse<T> {
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  has_next: boolean;
+  has_previous: boolean;
+  results: T[];
 }
 
 // ─── Users ───────────────────────────────────────────────────────────────────
@@ -53,34 +69,29 @@ export interface AdminUser {
 }
 
 export interface AdminUserDetail extends AdminUser {
+  plan_id: number | null;
   subscription_status: string;
+  subscription_end_date: string | null;
   report_limit: number;
-}
-
-export interface PaginatedResponse<T> {
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-  results: T[];
 }
 
 export type AdminUserListResponse = PaginatedResponse<AdminUser>;
 
 export interface CreateUserRequest {
   email: string;
-  full_name?: string;
+  full_name?: string | null;
 }
 
 export interface UpdateUserRequest {
-  full_name?: string;
+  // null clears the name; leaving it out keeps the current value.
+  full_name?: string | null;
   is_active: boolean;
   is_admin: boolean;
 }
 
 // ─── Subscriptions ───────────────────────────────────────────────────────────
+
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled';
 
 export interface AdminSubscription {
   id: number;
@@ -93,9 +104,15 @@ export interface AdminSubscription {
   end_date: string | null;
 }
 
+export type AdminSubscriptionListResponse = PaginatedResponse<AdminSubscription>;
+
+export interface SubscriptionListParams extends ListParams {
+  status?: SubscriptionStatus;
+}
+
 export interface UpdateSubscriptionRequest {
   plan_id: number;
-  status: string;
+  status: SubscriptionStatus;
   end_date?: string | null;
 }
 
@@ -116,7 +133,7 @@ export interface AdminReport {
 
 export type AdminReportListResponse = PaginatedResponse<AdminReport>;
 
-// ─── Login Logs ───────────────────────────────────────────────────────────────
+// ─── Login Logs ──────────────────────────────────────────────────────────────
 
 export interface LoginLog {
   id: number;
@@ -153,11 +170,14 @@ export interface ReportListParams extends ListParams {
 
 // ─── Plans ───────────────────────────────────────────────────────────────────
 
+/** Plans where a report limit of -1 means unlimited. */
+export const UNLIMITED_REPORTS = -1;
+
 export interface Plan {
   id: number;
   name: string;
   description: string | null;
-  price: number; // Decimal comes as number or string from json
+  price: number;
   currency: string;
   billing_cycle: string;
   report_limit: number;
@@ -203,11 +223,10 @@ export interface Payment {
   created_at: string;
 }
 
+export type PaymentListResponse = PaginatedResponse<Payment>;
+
+// Public, returned by the post-checkout page. Deliberately minimal.
 export interface PaymentVerificationResponse {
   paid: boolean;
   status: string;
-  amount: number;
-  currency: string;
-  plan: string;
-  payment_date: string;
 }

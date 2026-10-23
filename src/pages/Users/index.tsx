@@ -32,8 +32,11 @@ export function UsersPage() {
   const [deleteUser, setDeleteUser] = useState<AdminUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [pageError, setPageError] = useState('');
+
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
+    setPageError('');
     try {
       const params: UserListParams = { page, page_size: 20 };
       if (search) params.search = search;
@@ -45,6 +48,8 @@ export function UsersPage() {
       setTotalPages(res.total_pages);
       setHasNext(res.has_next);
       setHasPrevious(res.has_previous);
+    } catch {
+      setPageError('Could not load users. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +67,10 @@ export function UsersPage() {
       await usersApi.delete(deleteUser.id, hard);
       setDeleteUser(null);
       fetchUsers();
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setPageError(detail ?? 'Could not delete the user.');
+      setDeleteUser(null);
     } finally {
       setIsDeleting(false);
     }
@@ -151,6 +160,8 @@ export function UsersPage() {
           + Add User
         </button>
       </div>
+
+      {pageError && <div className="form-error" role="alert">⚠️ {pageError}</div>}
 
       {/* Table */}
       <div className="table-card">

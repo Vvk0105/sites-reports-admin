@@ -1,14 +1,20 @@
-import axios from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-// Support VITE_BASE_URL (e.g. http://localhost:8000/api/v1) or VITE_API_URL (bare origin)
-const BASE_URL = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || 'https://api.sitesreports.com/api/v1';
+// VITE_API_URL may be the bare origin or already include /api/v1; accept both.
+const API_ORIGIN = (import.meta.env.VITE_API_URL || 'https://api.sitesreports.com').replace(/\/+$/, '');
+const BASE_URL = API_ORIGIN.endsWith('/api/v1') ? API_ORIGIN : `${API_ORIGIN}/api/v1`;
 
 const client = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// ─── Request Interceptor: attach token ───────────────────────────────────────
+const AUTH_PATHS = ['/auth/admin/login', '/auth/refresh', '/auth/logout'];
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+// ─── Request: attach the access token ───────────────────────────────────────
+
 client.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
@@ -17,65 +23,62 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// ─── Response Interceptor: auto-refresh on 401 ───────────────────────────────
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (v: string) => void; reject: (e: unknown) => void }> = [];
+// ─── Response: refresh once, share the result across concurrent requests ───
 
-function processQueue(error: unknown, token: string | null) {
-  failedQueue.forEach(({ resolve, reject }) => {
-    if (error) reject(error);
-    else resolve(token!);
-  });
-  failedQueue = [];
+let refreshPromise: Promise<string> | null = null;
+
+function clearSessionAndRedirect() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  if (window.location.pathname !== '/login') {
+    window.location.assign('/login');
+  }
+}
+
+function refreshAccessToken(): Promise<string> {
+  // Only one refresh is in flight. Later 401s wait for it instead of
+  // spending the same refresh token twice (which would look like theft).
+  if (!refreshPromise) {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      return Promise.reject(new Error('No refresh token'));
+    }
+
+    refreshPromise = axios
+      .post(`${BASE_URL}/auth/refresh`, { refresh_token: refreshToken })
+      .then(({ data }) => {
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('refresh_token', data.refresh_token);
+        return data.access_token as string;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
 }
 
 client.interceptors.response.use(
   (res) => res,
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const original = error.config as RetriableConfig | undefined;
+    const url = original?.url ?? '';
+    const isAuthCall = AUTH_PATHS.some((path) => url.endsWith(path));
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return client(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        localStorage.clear();
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      try {
-        const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
-          refresh_token: refreshToken,
-        });
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        processQueue(null, data.access_token);
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
-        return client(originalRequest);
-      } catch (err) {
-        processQueue(err, null);
-        localStorage.clear();
-        window.location.href = '/login';
-        return Promise.reject(err);
-      } finally {
-        isRefreshing = false;
-      }
+    if (error.response?.status !== 401 || !original || original._retry || isAuthCall) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    original._retry = true;
+
+    try {
+      const token = await refreshAccessToken();
+      original.headers.Authorization = `Bearer ${token}`;
+      return client(original);
+    } catch (refreshError) {
+      clearSessionAndRedirect();
+      return Promise.reject(refreshError);
+    }
   }
 );
 

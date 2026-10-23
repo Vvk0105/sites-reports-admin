@@ -104,7 +104,8 @@ export function EditUserModal({ isOpen, onClose, onSuccess, user }: EditUserModa
     setError('');
     try {
       const req: UpdateUserRequest = {
-        full_name: fullName.trim() || undefined,
+        // Explicit null clears the name; the server keeps it when the field is omitted.
+        full_name: fullName.trim() || null,
         is_active: isActive,
         is_admin: isAdmin,
       };
@@ -231,10 +232,11 @@ export function DeleteUserModal({ isOpen, onClose, onConfirm, user, isLoading }:
               checked={deleteType === 'hard'} 
               onChange={() => setDeleteType('hard')}
             />
-            <strong>Hard Delete (Testing)</strong>
+            <strong>Permanent Delete</strong>
           </label>
           <p className="text-muted" style={{ fontSize: '0.85rem', marginLeft: '24px' }}>
-            Permanently erases the user and all associated data from the database. Cannot be undone.
+            Erases the user, their logs, reports and subscription. Not available for users with payment history
+            (their payment records must be kept). Cannot be undone.
           </p>
         </div>
       </div>

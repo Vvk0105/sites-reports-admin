@@ -5,6 +5,8 @@ import { Badge } from '../../components/Badge';
 import { ConfirmModal } from '../../components/Modal';
 import { PlanModal } from './PlanModal';
 import type { Plan } from '../../api/types';
+import { UNLIMITED_REPORTS } from '../../api/types';
+import { formatCurrency } from '../../utils/format';
 
 export function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -56,7 +58,7 @@ export function PlansPage() {
     {
       key: 'price',
       header: 'Price',
-      render: (p) => <span style={{ fontWeight: 600 }}>{p.currency} {p.price}</span>,
+      render: (p) => <span style={{ fontWeight: 600 }}>{formatCurrency(p.price, p.currency)}</span>,
       width: '100px',
     },
     {
@@ -68,7 +70,7 @@ export function PlansPage() {
     {
       key: 'report_limit',
       header: 'Report Limit',
-      render: (p) => p.report_limit >= 99999 ? '∞' : p.report_limit,
+      render: (p) => (p.report_limit === UNLIMITED_REPORTS ? '∞' : p.report_limit),
       width: '110px',
     },
     {

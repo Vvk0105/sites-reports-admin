@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { authApi } from '../api/auth';
 import type { AdminMe } from '../api/types';
 
@@ -12,21 +12,24 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function clearTokens() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminMe | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    if (!localStorage.getItem('access_token')) {
       setIsLoading(false);
       return;
     }
     try {
-      const me = await authApi.me();
-      setUser(me);
+      setUser(await authApi.me());
     } catch {
-      localStorage.clear();
+      clearTokens();
     } finally {
       setIsLoading(false);
     }
@@ -40,16 +43,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await authApi.login({ email, password });
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
-    const me = await authApi.me();
-    setUser(me);
+
+    try {
+      setUser(await authApi.me());
+    } catch (err) {
+      // Signed in, but not an admin (or the profile call failed): don't keep the tokens.
+      clearTokens();
+      throw err;
+    }
   };
 
   const logout = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
     if (refreshToken) {
-      try { await authApi.logout(refreshToken); } catch { /* ignore */ }
+      try {
+        await authApi.logout(refreshToken);
+      } catch {
+        // Local sign-out still proceeds if the server is unreachable.
+      }
     }
-    localStorage.clear();
+    clearTokens();
     setUser(null);
   };
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../../components/Modal';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { usersApi, plansApi } from '../../api/admin';
-import type { AdminUser, UpdateSubscriptionRequest, Plan } from '../../api/types';
+import { plansApi, usersApi } from '../../api/admin';
+import type { AdminUser, Plan, SubscriptionStatus, UpdateSubscriptionRequest } from '../../api/types';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -11,65 +11,75 @@ interface SubscriptionModalProps {
   user: AdminUser | null;
 }
 
-const STATUS_OPTIONS = ['trial', 'active', 'cancelled', 'expired', 'deactivated'];
+// Must match the backend SubscriptionStatus enum.
+const STATUS_OPTIONS: { value: SubscriptionStatus; label: string }[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
+
+function toDateInput(iso: string | null | undefined): string {
+  return iso ? iso.split('T')[0] : '';
+}
 
 export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: SubscriptionModalProps) {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [planId, setPlanId] = useState<number>(0);
-  const [status, setStatus] = useState('active');
+  const [planId, setPlanId] = useState<number | null>(null);
+  const [status, setStatus] = useState<SubscriptionStatus>('active');
   const [endDate, setEndDate] = useState('');
-  
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingPlans, setIsFetchingPlans] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
+  // Load the user's current subscription and the plan list, then pre-fill the form
+  // with the real values so saving without changes does not alter the subscription.
   useEffect(() => {
-    if (isOpen) {
-      fetchPlans();
-    }
-  }, [isOpen]);
+    if (!isOpen || !user) return;
 
-  useEffect(() => {
+    let cancelled = false;
     setError('');
-    setStatus('active');
-    // Default end date: 1 year from today
-    const d = new Date();
-    d.setFullYear(d.getFullYear() + 1);
-    setEndDate(d.toISOString().split('T')[0]);
-  }, [user]);
+    setIsFetching(true);
 
-  const fetchPlans = async () => {
-    setIsFetchingPlans(true);
-    try {
-      const data = await plansApi.list();
-      setPlans(data);
-      if (data.length > 0 && !planId) {
-        setPlanId(data[0].id);
-      }
-    } catch (err) {
-      console.error('Failed to fetch plans', err);
-    } finally {
-      setIsFetchingPlans(false);
-    }
-  };
+    Promise.all([plansApi.list(), usersApi.get(user.id)])
+      .then(([planList, detail]) => {
+        if (cancelled) return;
+        setPlans(planList);
+        setPlanId(detail.plan_id ?? planList[0]?.id ?? null);
+        const known = STATUS_OPTIONS.some((o) => o.value === detail.subscription_status);
+        setStatus(known ? (detail.subscription_status as SubscriptionStatus) : 'active');
+        setEndDate(toDateInput(detail.subscription_end_date));
+      })
+      .catch(() => {
+        if (!cancelled) setError('Could not load the current subscription.');
+      })
+      .finally(() => {
+        if (!cancelled) setIsFetching(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || planId === null) return;
+
     setIsLoading(true);
     setError('');
     try {
       const req: UpdateSubscriptionRequest = {
         plan_id: planId,
         status,
-        end_date: endDate ? new Date(endDate).toISOString() : null,
+        end_date: endDate ? new Date(`${endDate}T23:59:59Z`).toISOString() : null,
       };
       await usersApi.updateSubscription(user.id, req);
       onSuccess();
       onClose();
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? 'Failed to update subscription.';
-      setError(msg);
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(msg ?? 'Failed to update subscription.');
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +94,11 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
       footer={
         <div className="modal__footer-actions">
           <button className="btn btn--ghost" onClick={onClose} disabled={isLoading}>Cancel</button>
-          <button className="btn btn--primary" onClick={handleSubmit} disabled={isLoading || isFetchingPlans}>
+          <button
+            className="btn btn--primary"
+            onClick={handleSubmit}
+            disabled={isLoading || isFetching || planId === null}
+          >
             {isLoading ? <LoadingSpinner size="sm" /> : 'Update Subscription'}
           </button>
         </div>
@@ -100,7 +114,7 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
         </div>
       )}
 
-      {isFetchingPlans ? (
+      {isFetching ? (
         <div style={{ padding: '2rem 0' }}>
           <LoadingSpinner size="md" />
         </div>
@@ -109,19 +123,29 @@ export function SubscriptionModal({ isOpen, onClose, onSuccess, user }: Subscrip
           <div className="form-row">
             <div className="form-group">
               <label className="form-label" htmlFor="sub-plan">Plan</label>
-              <select id="sub-plan" className="form-select" value={planId} onChange={(e) => setPlanId(Number(e.target.value))}>
+              <select
+                id="sub-plan"
+                className="form-select"
+                value={planId ?? ''}
+                onChange={(e) => setPlanId(Number(e.target.value))}
+              >
                 {plans.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.currency} {p.price})
+                    {p.name} ({p.currency} {Number(p.price).toFixed(2)})
                   </option>
                 ))}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label" htmlFor="sub-status">Status</label>
-              <select id="sub-status" className="form-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <select
+                id="sub-status"
+                className="form-select"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
+              >
                 {STATUS_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>

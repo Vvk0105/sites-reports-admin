@@ -1,33 +1,53 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { paymentApi } from '../../api/payment';
 import type { PaymentVerificationResponse } from '../../api/types';
 import { PageLoader } from '../../components/LoadingSpinner';
 
+// The Stripe webhook usually lands within seconds of the redirect; poll briefly for it.
+const POLL_ATTEMPTS = 10;
+const POLL_INTERVAL_MS = 2000;
+
 export function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
-  const session_id = searchParams.get('session_id');
-  const navigate = useNavigate();
+  const sessionId = searchParams.get('session_id');
 
   const [payment, setPayment] = useState<PaymentVerificationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!session_id) {
+    if (!sessionId) {
       setError('No session ID found.');
       setIsLoading(false);
       return;
     }
 
-    paymentApi.verifySession(session_id)
-      .then(setPayment)
-      .catch((err) => {
-        console.error(err);
+    let cancelled = false;
+
+    const check = async (attempt: number) => {
+      try {
+        const result = await paymentApi.verifySession(sessionId);
+        if (cancelled) return;
+        setPayment(result);
+        if (result.paid || attempt >= POLL_ATTEMPTS) {
+          setIsLoading(false);
+        } else {
+          setTimeout(() => check(attempt + 1), POLL_INTERVAL_MS);
+        }
+      } catch {
+        if (cancelled) return;
         setError('Failed to verify payment session. It may be invalid or already processed.');
-      })
-      .finally(() => setIsLoading(false));
-  }, [session_id]);
+        setIsLoading(false);
+      }
+    };
+
+    check(1);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId]);
 
   if (isLoading) {
     return <PageLoader />;
@@ -36,7 +56,6 @@ export function PaymentSuccessPage() {
   return (
     <div className="login-layout">
       <div className="login-card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
-        
         {error ? (
           <>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
@@ -51,28 +70,9 @@ export function PaymentSuccessPage() {
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
             <h2 style={{ color: 'var(--green)', marginBottom: '0.5rem' }}>Payment Successful!</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-              Thank you for your subscription.
+              Thank you for your subscription. It is now active. You can close this window and return to the
+              Site Report app.
             </p>
-            
-            <div style={{ background: 'var(--bg-color)', padding: '1.5rem', borderRadius: '8px', marginBottom: '2rem', textAlign: 'left' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Plan</span>
-                <strong style={{ color: 'var(--primary-color)' }}>{payment.plan}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Amount Paid</span>
-                <strong>{payment.amount.toLocaleString(undefined, { style: 'currency', currency: payment.currency })}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Date</span>
-                <strong>{new Date(payment.payment_date).toLocaleDateString()}</strong>
-              </div>
-            </div>
-
-            <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginBottom: '1rem' }}>
-              Your subscription is now active. You can safely close this window and return to the Site Report mobile app.
-            </p>
-
             <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%' }}>
               Close Window
             </button>
@@ -82,7 +82,7 @@ export function PaymentSuccessPage() {
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⏳</div>
             <h2 style={{ marginBottom: '1rem' }}>Processing...</h2>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-              Your payment is still being processed. Please check back later.
+              Your payment is still being processed. Your subscription will update in the app shortly.
             </p>
             <button className="btn btn-primary" onClick={() => window.close()} style={{ width: '100%' }}>
               Close Window

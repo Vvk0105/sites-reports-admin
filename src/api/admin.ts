@@ -1,24 +1,27 @@
 import client from './client';
 import type {
-  DashboardStats,
-  RevenueChartResponse,
-  AdminUserListResponse,
-  AdminUserDetail,
-  AdminUser,
-  CreateUserRequest,
-  UpdateUserRequest,
-  AdminSubscription,
-  UpdateSubscriptionRequest,
-  AdminReportListResponse,
   AdminReport,
-  LoginLogListResponse,
-  UserListParams,
-  ReportListParams,
-  ListParams,
-  Plan,
+  AdminReportListResponse,
+  AdminSubscription,
+  AdminSubscriptionListResponse,
+  AdminUser,
+  AdminUserDetail,
+  AdminUserListResponse,
   CreatePlanRequest,
+  CreateUserRequest,
+  DashboardStats,
+  ListParams,
+  LoginLogListResponse,
+  PaymentListResponse,
+  Plan,
+  ReportListParams,
+  SubscriptionListParams,
+  RevenueChartResponse,
+  RevenueInterval,
   UpdatePlanRequest,
-  Payment,
+  UpdateSubscriptionRequest,
+  UpdateUserRequest,
+  UserListParams,
 } from './types';
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
@@ -28,10 +31,11 @@ export const dashboardApi = {
     const res = await client.get('/admin/dashboard');
     return res.data;
   },
+
   revenue: async (
-    interval: string,
+    interval: RevenueInterval,
     start_date: string,
-    end_date: string
+    end_date: string,
   ): Promise<RevenueChartResponse> => {
     const res = await client.get('/admin/dashboard/revenue', {
       params: { interval, start_date, end_date },
@@ -58,19 +62,16 @@ export const usersApi = {
     return res.data;
   },
 
-  update: async (id: number, data: UpdateUserRequest): Promise<AdminUser> => {
+  update: async (id: number, data: UpdateUserRequest): Promise<AdminUserDetail> => {
     const res = await client.put(`/admin/users/${id}`, data);
     return res.data;
   },
 
-  delete: async (id: number, hardDelete?: boolean): Promise<void> => {
+  delete: async (id: number, hardDelete = false): Promise<void> => {
     await client.delete(`/admin/users/${id}`, { params: { hard: hardDelete } });
   },
 
-  updateSubscription: async (
-    userId: number,
-    data: UpdateSubscriptionRequest
-  ): Promise<AdminSubscription> => {
+  updateSubscription: async (userId: number, data: UpdateSubscriptionRequest): Promise<AdminSubscription> => {
     const res = await client.put(`/admin/users/${userId}/subscription`, data);
     return res.data;
   },
@@ -79,8 +80,8 @@ export const usersApi = {
 // ─── Subscriptions ───────────────────────────────────────────────────────────
 
 export const subscriptionsApi = {
-  list: async (): Promise<AdminSubscription[]> => {
-    const res = await client.get('/admin/subscriptions');
+  list: async (params: SubscriptionListParams = {}): Promise<AdminSubscriptionListResponse> => {
+    const res = await client.get('/admin/subscriptions', { params });
     return res.data;
   },
 };
@@ -103,7 +104,7 @@ export const reportsApi = {
   },
 };
 
-// ─── Login Logs ───────────────────────────────────────────────────────────────
+// ─── Login Logs ──────────────────────────────────────────────────────────────
 
 export const loginLogsApi = {
   list: async (params: ListParams = {}): Promise<LoginLogListResponse> => {
@@ -138,8 +139,8 @@ export const plansApi = {
 // ─── Payments ────────────────────────────────────────────────────────────────
 
 export const paymentsApi = {
-  list: async (): Promise<Payment[]> => {
-    const res = await client.get('/admin/payments');
+  list: async (params: ListParams = {}): Promise<PaymentListResponse> => {
+    const res = await client.get('/admin/payments', { params });
     return res.data;
   },
 };

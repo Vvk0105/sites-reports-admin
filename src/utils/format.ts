@@ -18,6 +18,16 @@ export function formatDateTime(iso: string | null | undefined): string {
   }).format(new Date(iso));
 }
 
+export function formatCurrency(amount: number | string, currency: string): string {
+  const value = Number(amount);
+  try {
+    return new Intl.NumberFormat('en-AU', { style: 'currency', currency }).format(value);
+  } catch {
+    // Unknown currency code: fall back to plain number with the code.
+    return `${currency} ${value.toFixed(2)}`;
+  }
+}
+
 export function formatPlanType(plan: string): string {
   const map: Record<string, string> = {
     free: 'Free Trial',
